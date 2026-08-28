@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Catch My Love 💗</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: "Trebuchet MS", Arial, sans-serif;
+        background: linear-gradient(135deg, #ffdce9, #e9ddff);
+        color: #6d4260;
+    }
+
+    body {
+        touch-action: none;
+    }
+
+    /* =========================
+       GAME SCREEN
+    ========================= */
+
+    #game {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(255,255,255,.8), transparent 25%),
+            radial-gradient(circle at 80% 70%, rgba(255,255,255,.55), transparent 30%),
+            linear-gradient(135deg, #ffdce9 0%, #f5d8f4 45%, #ddd7ff 100%);
+    }
+
+    #particles {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+    .particle {
+        position: absolute;
+        bottom: -40px;
+        opacity: .55;
+        animation: floatUp linear infinite;
+        user-select: none;
+    }
+
+    @keyframes floatUp {
+        from {
+            transform: translateY(0) rotate(0deg);
+            opacity: 0;
+        }
+
+        15% {
+            opacity: .55;
+        }
+
+        to {
+            transform: translateY(-120vh) rotate(360deg);
+            opacity: 0;
+        }
+    }
+
+    /* =========================
+       HUD
+    ========================= */
+
+    #hud {
+        position: absolute;
+        z-index: 20;
+        top: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(92%, 650px);
+        text-align: center;
+    }
+
+    #title {
+        margin: 0 0 8px;
+        font-size: clamp(22px, 5vw, 34px);
+        color: #9b4d7e;
+        text-shadow: 0 2px 0 rgba(255,255,255,.8);
+    }
+
+    #meterBox {
+        width: 100%;
+        height: 27px;
+        background: rgba(255,255,255,.65);
+        border: 3px solid rgba(255,255,255,.85);
+        border-radius: 50px;
+        padding: 3px;
+        box-shadow: 0 5px 18px rgba(120,70,120,.15);
+    }
+
+    #meter {
+        height: 100%;
+        width: 0%;
+        border-radius: 50px;
+        background: linear-gradient(90deg, #ff79ad, #ff3e82, #c85cff);
+        transition: width .25s ease;
+        box-shadow: 0 0 12px rgba(255,70,140,.45);
+    }
+
+    #stats {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 7px;
+        padding: 0 5px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    /* =========================
+       PLAY AREA
+    ========================= */
+
+    #playArea {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+    }
+
+    .falling {
+        position: absolute;
+        z-index: 10;
+        width: 55px;
+        height: 55px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 39px;
+        user-select: none;
+        pointer-events: none;
+        filter: drop-shadow(0 5px 4px rgba(100,50,100,.15));
+    }
+
+    .golden {
+        filter:
+            drop-shadow(0 0 8px #ffd84d)
+            drop-shadow(0 5px 4px rgba(100,50,100,.2));
+        animation: goldenGlow .65s infinite alternate;
+    }
+
+    @keyframes goldenGlow {
+        from {
+            transform: scale(1);
+        }
+        to {
+            transform: scale(1.18);
+        }
+    }
+
+    /* =========================
+       PLAYER
+    ========================= */
+
+    #player {
+        position: absolute;
+        z-index: 15;
+        bottom: 35px;
+        left: 50%;
+        width: 82px;
+        height: 82px;
+        transform: translateX(-50%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 65px;
+        user-select: none;
+        transition: left .08s linear;
+        filter: drop-shadow(0 7px 5px rgba(100,50,100,.2));
+    }
+
+    #player::after {
+        content: "♡";
+        position: absolute;
+        bottom: -9px;
+        font-size: 28px;
+        color: #ff72aa;
+    }
+
+    /* =========================
+       POPUP
+    ========================= */
+
+    #popup {
+        position: fixed;
+        z-index: 100;
+        left: 50%;
+        top: 48%;
+        transform: translate(-50%, -50%) scale(.7);
+        width: min(85%, 420px);
+        padding: 22px;
+        text-align: center;
+        background: rgba(255,255,255,.94);
+        border: 3px solid #ffc3df;
+        border-radius: 25px;
+        box-shadow: 0 15px 50px rgba(100,60,120,.25);
+        opacity: 0;
+        pointer-events: none;
+        transition: .3s ease;
+    }
+
+    #popup.show {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    #popupEmoji {
+        font-size: 50px;
+    }
+
+    #popupText {
+        margin: 8px 0 0;
+        font-size: 20px;
+        font-weight: bold;
+        color: #9a4e7c;
+    }
+
+    /* =========================
+       START SCREEN
+    ========================= */
+
+    .overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        background: rgba(255,225,239,.88);
+        backdrop-filter: blur(9px);
+        transition: opacity .5s ease;
+    }
+
+    .card {
+        width: min(92%, 520px);
+        padding: 35px 25px;
+        text-align: center;
+        background: rgba(255,255,255,.91);
+        border: 3px solid #ffc7df;
+        border-radius: 32px;
+        box-shadow: 0 20px 70px rgba(120,70,130,.25);
+    }
+
+    .bigEmoji {
+        font-size: 75px;
+        animation: heartbeat 1.2s infinite;
+    }
+
+    @keyframes heartbeat {
+        0%, 100% {
+            transform: scale(1);
+        }
+        15% {
+            transform: scale(1.15);
+        }
+        30% {
+            transform: scale(1);
+        }
+        45% {
+            transform: scale(1.12);
+        }
+    }
+
+    .card h1 {
+        margin: 10px 0;
+        font-size: clamp(28px, 7vw, 42px);
+        color: #a44e7d;
+    }
+
+    .card p {
+        line-height: 1.6;
+        font-size: 16px;
+    }
+
+    button {
+        border: 0;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+    #startBtn,
+    #restartBtn {
+        margin-top: 15px;
+        padding: 14px 30px;
+        border-radius: 50px;
+        background: linear-gradient(135deg, #ff75a9, #c65cff);
+        color: white;
+        font-size: 17px;
+        font-weight: bold;
+        box-shadow: 0 8px 20px rgba(190,80,160,.3);
+        transition: transform .2s ease;
+    }
+
+    #startBtn:hover,
+    #restartBtn:hover {
+        transform: translateY(-3px) scale(1.03);
+    }
+
+    #instructions {
+        margin-top: 17px;
+        font-size: 13px;
+        opacity: .75;
+    }
+
+    /* =========================
+       FINAL SURPRISE
+    ========================= */
+
+    #finalScreen {
+        position: fixed;
+        inset: 0;
+        z-index: 300;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        overflow-y: auto;
+        background:
+            radial-gradient(circle at 50% 30%, rgba(255,255,255,.8), transparent 25%),
+            linear-gradient(135deg, #ffdce9, #e5d8ff);
+    }
+
+    #finalScreen.active {
+        display: flex;
+        animation: fadeIn .8s ease;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    #finalCard {
+        width: min(94%, 650px);
+        text-align: center;
+    }
+
+    #finalTitle {
+        font-size: clamp(30px, 7vw, 55px);
+        color: #a34778;
+        margin: 0 0 5px;
+    }
+
+    #finalSubtitle {
+        font-size: 17px;
+        margin-bottom: 22px;
+    }
+
+    #bigHeart {
+        width: 145px;
+        height: 145px;
+        margin: 10px auto 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 105px;
+        cursor: pointer;
+        user-select: none;
+        animation: heartbeat 1.15s infinite;
+        filter: drop-shadow(0 10px 15px rgba(200,50,120,.25));
+        transition: .3s;
+    }
+
+    #bigHeart:hover {
+        transform: scale(1.12);
+    }
+
+    #tapHint {
+        font-size: 13px;
+        opacity: .7;
+    }
+
+    /* =========================
+       LOVE LETTER
+    ========================= */
+
+    #letter {
+        display: none;
+        margin: 20px auto;
+        padding: 30px;
+        max-height: 70vh;
+        overflow-y: auto;
+        text-align: left;
+        background:
+            repeating-linear-gradient(
+                transparent,
+                transparent 31px,
+                rgba(160,100,140,.12) 32px
+            ),
+            #fffdf8;
+        border-radius: 8px;
+        border: 1px solid #e8d7cf;
+        box-shadow: 0 18px 50px rgba(100,60,100,.22);
+        position: relative;
+    }
+
+    #letter::before {
+        content: "💌";
+        position: absolute;
+        top: -24px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 42px;
+    }
+
+    #letter h2 {
+        text-align: center;
+        color: #a64c7d;
+        margin-top: 20px;
+    }
+
+    #letter p {
+        line-height: 1.9;
+        font-size: 16px;
+        margin: 12px 0;
+    }
+
+    .signature {
+        text-align: right;
+        margin-top: 25px;
+        font-size: 20px;
+        color: #a34c79;
+        font-weight: bold;
+    }
+
+    /* =========================
+       CONFETTI
+    ========================= */
+
+    .confetti {
+        position: fixed;
+        z-index: 500;
+        top: -30px;
+        pointer-events: none;
+        animation: confettiFall 3.5s linear forwards;
+    }
+
+    @keyframes confettiFall {
+        to {
+            transform:
+                translateY(110vh)
+                rotate(720deg);
+            opacity: 0;
+        }
+    }
+
+    /* =========================
+       MOBILE
+    ========================= */
+
+    @media (max-width: 600px) {
+        #hud {
+            top: 10px;
+        }
+
+        #player {
+            bottom: 25px;
+            width: 72px;
+            height: 72px;
+            font-size: 56px;
+        }
+
+        .falling {
+            width: 48px;
+            height: 48px;
+            font-size: 34px;
+        }
+
+        #letter {
+            padding: 25px 20px;
+            max-height: 65vh;
+        }
+
+        #letter p {
+            font-size: 15px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<!-- START SCREEN -->
+<div class="overlay" id="startScreen">
+    <div class="card">
+        <div class="bigEmoji">💗</div>
+
+        <h1>Catch My Love</h1>
+
+        <p>
+            A little game made just for you. 💕
+            <br>
+            Catch the hearts and cute surprises,
+            but be careful with the broken hearts!
+        </p>
+
+        <button id="startBtn">Start Catching Love 💕</button>
+
+        <div id="instructions">
+            🖥️ Desktop: ← → or A / D<br>
+            📱 Mobile: Swipe left or right
+        </div>
+    </div>
+</div>
+
+<!-- GAME -->
+<div id="game">
+
+    <div id="particles"></div>
+
+    <div id="hud">
+        <h1 id="title">💗 Catch My Love 💗</h1>
+
+        <div id="meterBox">
+            <div id="meter"></div>
+        </div>
+
+        <div id="stats">
+            <span>Love: <span id="loveText">0</span>%</span>
+            <span>Score: <span id="score">0</span></span>
+        </div>
+    </div>
+
+    <div id="playArea">
+        <div id="player">🧸</div>
+    </div>
+</div>
+
+<!-- POPUP -->
+<div id="popup">
+    <div id="popupEmoji">💛</div>
+    <div id="popupText">You make my heart skip a beat!</div>
+</div>
+
+<!-- FINAL SCREEN -->
+<div id="finalScreen">
+
+    <div id="finalCard">
+
+        <h1 id="finalTitle">You Filled My Heart! 💗</h1>
+
+        <div id="finalSubtitle">
+            You collected all the love I had waiting for you.
+        </div>
+
+        <div id="bigHeart">💖</div>
+
+        <div id="tapHint">
+            Tap the heart for a little surprise... 💌
+        </div>
+
+        <div id="letter">
+
+            <h2>For My Beautiful Queen 💕</h2>
+
+            <p>
+                My beloved beautiful queen,
+            </p>
+
+            <p>
+                From the moment our paths crossed, something in my
+                world became a little softer and brighter. You have
+                this special way of making ordinary days feel like
+                little treasures.
+            </p>
+
+            <p>
+                I made this little game because I wanted to give you
+                something simple but meaningful — something that
+                reminds you that you are loved, appreciated, and
+                incredibly special to me.
+            </p>
+
+            <p>
+                I know there are days when things feel tiring and
+                overwhelming. Please remember that you don't have to
+                be perfect all the time. You don't have to carry
+                everything by yourself.
+            </p>
+
+            <p>
+                I'll always be cheering for you, especially when
+                you're chasing your dreams. Even when you doubt
+                yourself, I'll be here reminding you of how amazing
+                you are.
+            </p>
+
+            <p>
+                And most importantly, thank you for being you.
+                Thank you for your patience, your kindness, your
+                little smiles, your presence, and all the moments
+                we've shared.
+            </p>
+
+            <p>
+                No matter how many hearts appear in this game,
+                they could never represent how much you mean to me.
+            </p>
+
+            <p>
+                You are still the person my heart chooses. ❤️
+            </p>
+
+            <div class="signature">
+                Forever yours,<br>
+                Liyel 💗
+            </div>
+
+        </div>
+
+        <button id="restartBtn">Play Again 💕</button>
+
+    </div>
+</div>
+
+<script>
+/* ==========================================
+   GAME VARIABLES
+========================================== */
+
+const game = document.getElementById("game");
+const playArea = document.getElementById("playArea");
+const player = document.getElementById("player");
+
+const meter = document.getElementById("meter");
+const loveText = document.getElementById("loveText");
+const scoreText = document.getElementById("score");
+
+const startScreen = document.getElementById("startScreen");
+const startBtn = document.getElementById("startBtn");
+
+const finalScreen = document.getElementById("finalScreen");
+const bigHeart = document.getElementById("bigHeart");
+const letter = document.getElementById("letter");
+const restartBtn = document.getElementById("restartBtn");
+
+const popup = document.getElementById("popup");
+const popupText = document.getElementById("popupText");
+const popupEmoji = document.getElementById("popupEmoji");
+
+let love = 0;
+let score = 0;
+let playerX = window.innerWidth / 2;
+
+let running = false;
+let spawnTimer = null;
+
+const fallingObjects = [];
+
+/* ==========================================
+   BACKGROUND PARTICLES
+========================================== */
+
+const particleContainer = document.getElementById("particles");
+
+const particleSymbols = [
+    "♡", "♥", "💗", "💕", "✨", "🌸", "💫"
+];
+
+function createParticles() {
+
+    particleContainer.innerHTML = "";
+
+    for (let i = 0; i < 35; i++) {
+
+        const particle = document.createElement("div");
+
+        particle.className = "particle";
+
+        particle.textContent =
+            particleSymbols[
+                Math.floor(Math.random() * particleSymbols.length)
+            ];
+
+        particle.style.left =
+            Math.random() * 100 + "%";
+
+        particle.style.fontSize =
+            (12 + Math.random() * 22) + "px";
+
+        particle.style.animationDuration =
+            (7 + Math.random() * 12) + "s";
+
+        particle.style.animationDelay =
+            (-Math.random() * 15) + "s";
+
+        particleContainer.appendChild(particle);
+    }
+}
+
+createParticles();
+
+/* ==========================================
+   START GAME
+========================================== */
+
+startBtn.addEventListener("click", startGame);
+
+function startGame() {
+
+    startScreen.style.opacity = "0";
+
+    setTimeout(() => {
+        startScreen.style.display = "none";
+    }, 500);
+
+    resetGame();
+
+    running = true;
+
+    startSpawning();
+}
+
+/* ==========================================
+   RESET
+========================================== */
+
+function resetGame() {
+
+    love = 0;
+    score = 0;
+
+    loveText.textContent = love;
+    scoreText.textContent = score;
+
+    meter.style.width = "0%";
+
+    fallingObjects.forEach(obj => obj.element.remove());
+
+    fallingObjects.length = 0;
+
+    playerX = window.innerWidth / 2;
+
+    updatePlayer();
+
+    finalScreen.classList.remove("active");
+
+    letter.style.display = "none";
+
+    bigHeart.style.display = "flex";
+
+    document.getElementById("tapHint").style.display = "block";
+
+    clearInterval(spawnTimer);
+}
+
+/* ==========================================
+   PLAYER MOVEMENT
+========================================== */
+
+function movePlayer(amount) {
+
+    if (!running) return;
+
+    playerX += amount;
+
+    const half = 41;
+
+    playerX = Math.max(
+        half,
+        Math.min(window.innerWidth - half, playerX)
+    );
+
+    updatePlayer();
+}
+
+function updatePlayer() {
+    player.style.left = playerX + "px";
+}
+
+document.addEventListener("keydown", e => {
+
+    if (!running) return;
+
+    if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") {
+        movePlayer(-45);
+    }
+
+    if (e.key === "ArrowRight" || e.key.toLowerCase() === "d") {
+        movePlayer(45);
+    }
+});
+
+/* ==========================================
+   TOUCH CONTROLS
+========================================== */
+
+let touchStartX = 0;
+let touchStartY = 0;
+
+game.addEventListener("touchstart", e => {
+
+    const touch = e.touches[0];
+
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+
+}, { passive: true });
+
+game.addEventListener("touchmove", e => {
+
+    if (!running) return;
+
+    const touch = e.touches[0];
+
+    const difference = touch.clientX - touchStartX;
+
+    if (Math.abs(difference) > 8) {
+
+        movePlayer(difference * 0.55);
+
+        touchStartX = touch.clientX;
+    }
+
+}, { passive: true });
+
+/* ==========================================
+   SPAWN OBJECTS
+========================================== */
+
+const objectTypes = [
+    {
+        emoji: "❤️",
+        type: "good",
+        value: 8
+    },
+    {
+        emoji: "💕",
+        type: "good",
+        value: 6
+    },
+    {
+        emoji: "🌸",
+        type: "good",
+        value: 5
+    },
+    {
+        emoji: "💌",
+        type: "good",
+        value: 7
+    },
+    {
+        emoji: "💛",
+        type: "gold",
+        value: 15
+    },
+    {
+        emoji: "💔",
+        type: "bad",
+        value: -12
+    },
+    {
+        emoji: "⏰",
+        type: "bad",
+        value: -10
+    }
+];
+
+function startSpawning() {
+
+    spawnTimer = setInterval(() => {
+
+        if (running) {
+            spawnObject();
+        }
+
+    }, 650);
+}
+
+function spawnObject() {
+
+    const random = Math.random();
+
+    let selected;
+
+    /*
+       Golden heart is rare.
+    */
+
+    if (random < 0.07) {
+
+        selected = objectTypes[4];
+
+    } else if (random < 0.23) {
+
+        selected =
+            objectTypes[
+                5 + Math.floor(Math.random() * 2)
+            ];
+
+    } else {
+
+        selected =
+            objectTypes[
+                Math.floor(Math.random() * 4)
+            ];
+    }
+
+    const element = document.createElement("div");
+
+    element.className = "falling";
+
+    if (selected.type === "gold") {
+        element.classList.add("golden");
+    }
+
+    element.textContent = selected.emoji;
+
+    const size = window.innerWidth < 600 ? 48 : 55;
+
+    const x =
+        Math.random() *
+        (window.innerWidth - size);
+
+    element.style.left = x + "px";
+
+    element.style.top = "-65px";
+
+    playArea.appendChild(element);
+
+    const object = {
+        element: element,
+        type: selected.type,
+        value: selected.value,
+        x: x,
+        y: -65,
+        speed: 2.5 + Math.random() * 2.5
+    };
+
+    fallingObjects.push(object);
+
+    animateObject(object);
+}
+
+/* ==========================================
+   FALLING ANIMATION
+========================================== */
+
+function animateObject(object) {
+
+    if (!running) return;
+
+    object.y += object.speed;
+
+    object.element.style.top =
+        object.y + "px";
+
+    const playerRect =
+        player.getBoundingClientRect();
+
+    const objectRect =
+        object.element.getBoundingClientRect();
+
+    if (isColliding(playerRect, objectRect)) {
+
+        collectObject(object);
+
+        return;
+    }
+
+    if (object.y > window.innerHeight + 80) {
+
+        removeObject(object);
+
+        return;
+    }
+
+    requestAnimationFrame(() => animateObject(object));
+}
+
+/* ==========================================
+   COLLISION
+========================================== */
+
+function isColliding(a, b) {
+
+    return !(
+        a.right < b.left ||
+        a.left > b.right ||
+        a.bottom < b.top ||
+        a.top > b.bottom
+    );
+}
+
+/* ==========================================
+   COLLECT
+========================================== */
+
+function collectObject(object) {
+
+    if (!fallingObjects.includes(object)) return;
+
+    if (object.type === "good") {
+
+        love += object.value;
+        score += 10;
+
+        showFloatingText(
+            "+" + object.value + "% Love 💗",
+            "#ff4f93"
+        );
+
+    }
+
+    else if (object.type === "gold") {
+
+        love += object.value;
+        score += 50;
+
+        showPopup(
+            "💛",
+            "You make my heart skip a beat!"
+        );
+
+    }
+
+    else if (object.type === "bad") {
+
+        love += object.value;
+
+        score = Math.max(0, score - 5);
+
+        showFloatingText(
+            "Oh no! 💔",
+            "#9b637f"
+        );
+    }
+
+    love = Math.max(0, Math.min(100, love));
+
+    loveText.textContent = love;
+    scoreText.textContent = score;
+
+    meter.style.width = love + "%";
+
+    removeObject(object);
+
+    if (love >= 100) {
+
+        finishGame();
+    }
+}
+
+/* ==========================================
+   REMOVE OBJECT
+========================================== */
+
+function removeObject(object) {
+
+    const index =
+        fallingObjects.indexOf(object);
+
+    if (index !== -1) {
+        fallingObjects.splice(index, 1);
+    }
+
+    object.element.remove();
+}
+
+/* ==========================================
+   POPUP
+========================================== */
+
+let popupTimeout;
+
+function showPopup(emoji, text) {
+
+    popupEmoji.textContent = emoji;
+    popupText.textContent = text;
+
+    popup.classList.add("show");
+
+    clearTimeout(popupTimeout);
+
+    popupTimeout = setTimeout(() => {
+        popup.classList.remove("show");
+    }, 1800);
+}
+
+/* ==========================================
+   FLOATING TEXT
+========================================== */
+
+function showFloatingText(text, color) {
+
+    const floating = document.createElement("div");
+
+    floating.textContent = text;
+
+    floating.style.position = "fixed";
+    floating.style.left = playerX + "px";
+    floating.style.bottom = "120px";
+    floating.style.zIndex = "150";
+    floating.style.fontWeight = "bold";
+    floating.style.color = color;
+    floating.style.pointerEvents = "none";
+    floating.style.fontSize = "17px";
+    floating.style.textShadow =
+        "0 2px 4px rgba(255,255,255,.9)";
+
+    document.body.appendChild(floating);
+
+    let opacity = 1;
+    let y = 0;
+
+    const animation = setInterval(() => {
+
+        y -= 2;
+
+        opacity -= .025;
+
+        floating.style.transform =
+            `translate(-50%, ${y}px)`;
+
+        floating.style.opacity = opacity;
+
+        if (opacity <= 0) {
+
+            clearInterval(animation);
+
+            floating.remove();
+        }
+
+    }, 30);
+}
+
+/* ==========================================
+   FINISH GAME
+========================================== */
+
+function finishGame() {
+
+    if (!running) return;
+
+    running = false;
+
+    clearInterval(spawnTimer);
+
+    fallingObjects.forEach(obj => {
+        obj.element.remove();
+    });
+
+    fallingObjects.length = 0;
+
+    createConfetti();
+
+    setTimeout(() => {
+
+        finalScreen.classList.add("active");
+
+    }, 700);
+}
+
+/* ==========================================
+   BIG HEART REVEAL
+========================================== */
+
+bigHeart.addEventListener("click", () => {
+
+    bigHeart.style.display = "none";
+
+    document.getElementById("tapHint").style.display = "none";
+
+    letter.style.display = "block";
+
+    letter.animate(
+        [
+            {
+                opacity: 0,
+                transform: "translateY(30px) scale(.95)"
+            },
+            {
+                opacity: 1,
+                transform: "translateY(0) scale(1)"
+            }
+        ],
+        {
+            duration: 700,
+            easing: "ease-out",
+            fill: "forwards"
+        }
+    );
+
+    createConfetti();
+});
+
+/* ==========================================
+   CONFETTI
+========================================== */
+
+function createConfetti() {
+
+    const symbols = [
+        "💗",
+        "💕",
+        "💖",
+        "❤️",
+        "💜",
+        "✨",
+        "🌸",
+        "💌"
+    ];
+
+    for (let i = 0; i < 80; i++) {
+
+        const confetti =
+            document.createElement("div");
+
+        confetti.className = "confetti";
+
+        confetti.textContent =
+            symbols[
+                Math.floor(
+                    Math.random() * symbols.length
+                )
+            ];
+
+        confetti.style.left =
+            Math.random() * 100 + "vw";
+
+        confetti.style.fontSize =
+            (14 + Math.random() * 25) + "px";
+
+        confetti.style.animationDuration =
+            (2 + Math.random() * 2.5) + "s";
+
+        confetti.style.animationDelay =
+            Math.random() * .8 + "s";
+
+        document.body.appendChild(confetti);
+
+        setTimeout(() => {
+            confetti.remove();
+        }, 5000);
+    }
+}
+
+/* ==========================================
+   RESTART
+========================================== */
+
+restartBtn.addEventListener("click", () => {
+
+    finalScreen.classList.remove("active");
+
+    resetGame();
+
+    running = true;
+
+    startSpawning();
+});
+
+/* ==========================================
+   RESPONSIVE RESIZE
+========================================== */
+
+window.addEventListener("resize", () => {
+
+    playerX = Math.min(
+        playerX,
+        window.innerWidth - 41
+    );
+
+    updatePlayer();
+});
+
+</script>
+
+</body>
+</html
